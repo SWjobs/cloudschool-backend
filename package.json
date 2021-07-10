@@ -1,0 +1,38 @@
+{
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.1",
+    "@types/cookie-parser": "^1.4.2",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.3.1",
+    "cross-env": "^7.0.3",
+    "nodemon": "^2.0.11",
+    "ts-node": "^10.1.0",
+    "typescript": "^4.3.5"
+  },
+  "name": "cloudschool-backend",
+  "description": "SWjobs 백엔드 앱",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "cross-env NODE_ENV=production node build/index.js",
+    "dev": "cross-env NODE_ENV=development nodemon --exec ts-node --files src/index.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SWjobs/cloudschool-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SWjobs/cloudschool-backend/issues"
+  },
+  "homepage": "https://github.com/SWjobs/cloudschool-backend#readme"
+}
