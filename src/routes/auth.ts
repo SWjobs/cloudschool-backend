@@ -2,7 +2,7 @@ import { Router } from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import { getConnection } from '../module/db';
-import { RegisterData } from '../types/authtypes';
+import { AuthData } from '../types/authtypes';
 import { hash, genSalt } from 'bcrypt';
 
 const router = Router({ mergeParams: true });
@@ -12,11 +12,12 @@ router.post('/login', (req, res, next) => {
     if (err || !user) return res.status(400).end();
     req.login(user, { session: false }, (error) => {
       if (error) next(error);
+      console.log(user);
       const token = jwt.sign(
         {
-          uid: user.uid,
+          uid: user.user_id,
         },
-        process.env.SECRET_KEY!,
+        process.env.SECRET_KEY ?? '',
         { expiresIn: '7d' }
       );
       return res.json({ token });
@@ -43,7 +44,7 @@ router.get('/check-duplicate', async (req, res) => {
 });
 
 router.post('/register', async (req, res) => {
-  const { userId, name, password, orgName } = req.body as RegisterData;
+  const { userId, name, password, orgName } = req.body as AuthData;
 
   try {
     const conn = await getConnection();

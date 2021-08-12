@@ -30,8 +30,13 @@ const passportConfig = () => {
           'SELECT * FROM users WHERE `user_id` = ?',
           [uid]
         );
-        const rows = r[0] as any;
-        user = rows[0];
+        const row = (r[0] as any)[0];
+        user = {
+          userId: row.user_id,
+          name: row.name,
+          password: row.password,
+          orgName: row.orgname,
+        };
 
         if (!user) return done(null, false);
         const isSamePassword = await bcrypt.compare(password, user.password);
@@ -53,8 +58,13 @@ const passportConfig = () => {
           'SELECT * FROM users WHERE `user_id` = ?',
           [payload.uid]
         );
-        const rows = r[0] as any[];
-        user = rows[0];
+        const row = (r[0] as any)[0];
+        user = {
+          userId: row.user_id,
+          name: row.name,
+          password: row.password,
+          orgName: row.orgname,
+        };
 
         if (!user) return done(null, false);
       } catch (e) {

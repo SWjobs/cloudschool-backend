@@ -12,10 +12,10 @@ export interface DBconnectionType {
 }
 
 const conf: DBconnectionType = {
-  dbUser: process.env.DB_USER!,
-  dbName: process.env.DB_NAME!,
-  dbPassword: process.env.DB_PASSWORD!,
-  host: process.env.DB_HOST!,
+  dbUser: process.env.DB_USER ?? '',
+  dbName: process.env.DB_NAME ?? '',
+  dbPassword: process.env.DB_PASSWORD ?? '',
+  host: process.env.DB_HOST ?? '',
 };
 
 const pool = mysql.createPool({
