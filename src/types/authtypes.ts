@@ -1,5 +1,6 @@
 export interface RegisterData {
-  userId: string
-  password: string
-  orgName: string | null
+  userId: string;
+  name: string;
+  password: string;
+  orgName: string | null;
 }
