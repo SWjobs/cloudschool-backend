@@ -15,12 +15,12 @@ router.post('/login', (req, res, next) => {
       console.log(user);
       const token = jwt.sign(
         {
-          uid: user.user_id,
+          uid: user.userId,
         },
         process.env.SECRET_KEY ?? '',
         { expiresIn: '7d' }
       );
-      return res.json({ token });
+      return res.json({ token, expires_in: 7 * 24 * 60 * 60 });
     });
   })(req, res);
 });
