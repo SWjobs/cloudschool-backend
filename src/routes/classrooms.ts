@@ -1,7 +1,14 @@
 import { Router } from 'express';
 import { getConnection } from '../module/db';
-import { Classroom, Debate, Notice, TimeTableCell } from '../types/classrooms';
+import {
+  Classroom,
+  Debate,
+  DebateComment,
+  Notice,
+  TimeTableCell,
+} from '../types/classrooms';
 import { User } from '../types/users';
+import { randomUUID } from 'crypto';
 
 const router = Router({ mergeParams: true });
 
@@ -184,6 +191,86 @@ router.get('/:class_id/debates', async (req, res) => {
     });
 
     res.send(datas);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json(e);
+  }
+});
+
+router.get('/:class_id/debates/:debate_id', async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const r = await conn.execute(
+      'SELECT * FROM debates, users_classrooms WHERE debates.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ? AND debates.debate_id = ?',
+      [req.params.class_id, req.user.userId, req.params.debate_id]
+    );
+    const [row] = r[0] as any[];
+
+    const data: Debate = {
+      debateId: row.debate_id,
+      classId: row.class_id,
+      name: row.name,
+      description: row.description,
+      status: row.status,
+      subject: row.subject,
+      created_by: row.created_by,
+      created_at: row.created_at,
+    };
+
+    res.send(data);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json(e);
+  }
+});
+
+router.get('/:class_id/debates/:debate_id/comments', async (req, res) => {
+  try {
+    const conn = await getConnection();
+    const r = await conn.execute(
+      `SELECT * FROM debates, debates_comments, users_classrooms
+      WHERE users_classrooms.class_id = ?
+        AND users_classrooms.user_id = ?
+        AND users_classrooms.class_id = debates.class_id
+        AND debates.debate_id = debates_comments.debate_id
+        AND debates_comments.debate_id = ?`,
+      [req.params.class_id, req.user.userId, req.params.debate_id]
+    );
+    const rows = r[0] as any[];
+
+    const datas = rows.map((row) => {
+      const d: DebateComment = {
+        commentId: row.comment_id,
+        debateId: row.debate_id,
+        userId: row.user_id,
+        content: row.content,
+        created_at: row.created_at,
+      };
+      return d;
+    });
+
+    res.send(datas);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json(e);
+  }
+});
+
+router.post('/classrooms/:class_id/debates/:debate_id', async (req, res) => {
+  try {
+    const conn = await getConnection();
+    await conn.execute(
+      `INSERT INTO debates_comments SET comment_id=?, debate_id=?, user_id=?, content=?, created_at=?`,
+      [
+        randomUUID().replace(/-/gi, ''),
+        req.params.debate_id,
+        req.user.userId,
+        req.body.content,
+        new Date(),
+      ]
+    );
+
+    res.send('OK');
   } catch (e) {
     console.error(e);
     res.status(500).json(e);

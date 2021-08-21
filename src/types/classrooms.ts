@@ -33,3 +33,11 @@ export interface Debate {
   created_by: string;
   created_at: string;
 }
+
+export interface DebateComment {
+  commentId: string;
+  debateId: string;
+  userId: string;
+  content: string;
+  created_at: string;
+}
