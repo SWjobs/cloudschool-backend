@@ -25,7 +25,6 @@ const pool = mysql.createPool({
   database: conf.dbName,
   connectionLimit: 10000,
   supportBigNumbers: true,
-  timezone: 'Z',
   bigNumberStrings: true,
   namedPlaceholders: true,
 });
