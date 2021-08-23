@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM classrooms, users_classrooms WHERE classrooms.class_id = users_classrooms.class_id AND users_classrooms.user_id = ?',
+      'SELECT classrooms.* FROM classrooms, users_classrooms WHERE classrooms.class_id = users_classrooms.class_id AND users_classrooms.user_id = ?',
       [req.user.userId]
     );
     const rows = r[0] as any[];
@@ -42,7 +42,7 @@ router.get('/:class_id', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM classrooms, users_classrooms WHERE classrooms.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
+      'SELECT classrooms.* FROM classrooms, users_classrooms WHERE classrooms.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
       [req.params.class_id, req.user.userId]
     );
     const [row] = r[0] as any[];
@@ -65,7 +65,7 @@ router.get('/:class_id/members', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM users, users_classrooms WHERE users_classrooms.class_id = ? AND users_classrooms.user_id = users.user_id',
+      'SELECT users.* FROM users, users_classrooms WHERE users_classrooms.class_id = ? AND users_classrooms.user_id = users.user_id',
       [req.params.class_id]
     );
     const rows = r[0] as any[];
@@ -90,7 +90,7 @@ router.get('/:class_id/timetable', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM timetables, users_classrooms WHERE timetables.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
+      'SELECT timetables.* FROM timetables, users_classrooms WHERE timetables.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
       [req.params.class_id, req.user.userId]
     );
     const rows = r[0] as any[];
@@ -118,7 +118,7 @@ router.get('/:class_id/notices', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM notices, users_classrooms WHERE notices.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
+      'SELECT notices.* FROM notices, users_classrooms WHERE notices.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
       [req.params.class_id, req.user.userId]
     );
     const rows = r[0] as any[];
@@ -146,7 +146,7 @@ router.get('/:class_id/notices/:notice_id', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM notices, users_classrooms WHERE notices.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ? AND notices.notice_id = ?',
+      'SELECT notices.* FROM notices, users_classrooms WHERE notices.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ? AND notices.notice_id = ?',
       [req.params.class_id, req.user.userId, req.params.notice_id]
     );
     const [row] = r[0] as any[];
@@ -171,7 +171,7 @@ router.get('/:class_id/debates', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM debates, users_classrooms WHERE debates.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
+      'SELECT debates.* FROM debates, users_classrooms WHERE debates.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ?',
       [req.params.class_id, req.user.userId]
     );
     const rows = r[0] as any[];
@@ -201,7 +201,7 @@ router.get('/:class_id/debates/:debate_id', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      'SELECT * FROM debates, users_classrooms WHERE debates.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ? AND debates.debate_id = ?',
+      'SELECT debates.* FROM debates, users_classrooms WHERE debates.class_id = users_classrooms.class_id = ? AND users_classrooms.user_id = ? AND debates.debate_id = ?',
       [req.params.class_id, req.user.userId, req.params.debate_id]
     );
     const [row] = r[0] as any[];
@@ -228,12 +228,13 @@ router.get('/:class_id/debates/:debate_id/comments', async (req, res) => {
   try {
     const conn = await getConnection();
     const r = await conn.execute(
-      `SELECT * FROM debates, debates_comments, users_classrooms
+      `SELECT debates_comments.* FROM debates, debates_comments, users_classrooms
       WHERE users_classrooms.class_id = ?
         AND users_classrooms.user_id = ?
         AND users_classrooms.class_id = debates.class_id
         AND debates.debate_id = debates_comments.debate_id
-        AND debates_comments.debate_id = ?`,
+        AND debates_comments.debate_id = ?
+      ORDER BY debates_comments.created_at ASC`,
       [req.params.class_id, req.user.userId, req.params.debate_id]
     );
     const rows = r[0] as any[];
@@ -256,21 +257,31 @@ router.get('/:class_id/debates/:debate_id/comments', async (req, res) => {
   }
 });
 
-router.post('/classrooms/:class_id/debates/:debate_id', async (req, res) => {
+router.post('/:class_id/debates/:debate_id', async (req, res) => {
   try {
     const conn = await getConnection();
+
+    const created_at = new Date();
+    const data: DebateComment = {
+      commentId: randomUUID().replace(/-/gi, ''),
+      debateId: req.params.debate_id,
+      userId: req.user.userId,
+      content: req.body.content,
+      created_at: created_at.toISOString(),
+    };
+
     await conn.execute(
       `INSERT INTO debates_comments SET comment_id=?, debate_id=?, user_id=?, content=?, created_at=?`,
       [
-        randomUUID().replace(/-/gi, ''),
+        data.commentId,
         req.params.debate_id,
         req.user.userId,
         req.body.content,
-        new Date(),
+        created_at,
       ]
     );
 
-    res.send('OK');
+    res.json(data);
   } catch (e) {
     console.error(e);
     res.status(500).json(e);
