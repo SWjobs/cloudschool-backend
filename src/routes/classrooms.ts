@@ -9,6 +9,7 @@ import {
 } from '../types/classrooms';
 import { User } from '../types/users';
 import { randomUUID } from 'crypto';
+import { format } from 'mysql2';
 
 const router = Router({ mergeParams: true });
 
@@ -161,6 +162,51 @@ router.get('/:class_id/notices/:notice_id', async (req, res) => {
     };
 
     res.send(data);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json(e);
+  }
+});
+
+router.post('/:class_id/debates', async (req, res) => {
+  const data: Omit<
+    Debate,
+    'debateId' | 'classId' | 'status' | 'created_by' | 'created_at'
+  > = req.body;
+
+  try {
+    const conn = await getConnection();
+
+    const uid = randomUUID().replace(/-/gi, '');
+    const now = new Date();
+
+    await conn.execute(
+      format('INSERT INTO debates SET ?', [
+        {
+          debate_id: uid,
+          class_id: req.params.class_id,
+          name: data.name,
+          description: data.description,
+          status: 'open',
+          subject: data.subject,
+          created_by: req.user.userId,
+          created_at: now,
+        },
+      ])
+    );
+
+    const d: Debate = {
+      debateId: uid,
+      classId: req.params.class_id,
+      name: data.name,
+      description: data.description,
+      status: 'open',
+      subject: data.subject,
+      created_by: req.params.class_id,
+      created_at: now.toISOString(),
+    };
+
+    res.send(d);
   } catch (e) {
     console.error(e);
     res.status(500).json(e);

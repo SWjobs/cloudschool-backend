@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { getConnection } from '../module/db';
 import { User } from '../types/users';
 
 const router = Router({ mergeParams: true });
